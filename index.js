@@ -1,4 +1,4 @@
-// Utf8 bytes utils for nodejs/iojs.
+// Utf8 bytes array from/to string.
 // Copyright (c) Chao Wang <hit9@icloud.com>
 
 exports.fromString = function(s) {
