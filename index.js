@@ -1,63 +1,65 @@
 // Utf8 bytes utils for nodejs/iojs.
 // Copyright (c) Chao Wang <hit9@icloud.com>
 
-function fromCharCode(c) {
-  if (typeof c !== 'number' ||
-     (c & 0xffff) !== c)
-    throw new TypeError('takes uint16');
+exports.fromString = function(s) {
+  var idx = 0;
+  var len = s.length;
+  var bytes = [];
 
-  var buf = [];
+  while (idx < len) {
+    var c = s.charCodeAt(idx++);
+    var buf = [];
 
-  if (c <= 0x7f) {
-    // 0XXX XXXX 1 byte
-    buf[0] = c;
-    buf.length = 1;
-  } else if (c <= 0x7ff) {
-    // 110X XXXX 2 bytes
-    buf[0] = (0xc0 | (c >> 6));
-    buf[1] = (0x80 | (c & 0x3f));
-    buf.length = 2;
-  } else if (c <= 0xffff) {
-    // 1110 XXXX 3 bytes
-    buf[0] = (0xe0 | (c >> 12));
-    buf[1] = (0x80 | ((c >> 6) & 0x3f));
-    buf[2] = (0x80 | (c & 0x3f));
-    buf.length = 3;
+    if (c <= 0x7f) {
+      // 0XXX XXXX 1 byte
+      buf[0] = c;
+      buf.length = 1;
+    } else if (c <= 0x7ff) {
+      // 110X XXXX 2 bytes
+      buf[0] = (0xc0 | (c >> 6));
+      buf[1] = (0x80 | (c & 0x3f));
+      buf.length = 2;
+    } else if (c <= 0xffff) {
+      // 1110 XXXX 3 bytes
+      buf[0] = (0xe0 | (c >> 12));
+      buf[1] = (0x80 | ((c >> 6) & 0x3f));
+      buf[2] = (0x80 | (c & 0x3f));
+      buf.length = 3;
+    }
+    [].push.apply(bytes, buf);
   }
-  return buf;
+  return bytes;
 };
 
-function fromChar(ch) {
-  return fromCharCode(ch.charCodeAt(0));
-}
-
-function fromString(s) {
+exports.toString = function(bytes) {
   var buf = [];
-  for (var i = 0; i < s.length; i++)
-    Array.prototype.push.apply(
-      buf, fromCharCode(s.charCodeAt(i)));
-  return buf;
-}
+  var idx = 0;
+  var len = bytes.length;
 
-function toCharCode(buf) {
-  for (var i = 0; i < 3 && i < buf.length; i++)
-    if (typeof buf[i] !== 'number' ||
-        (buf[i] & 0xff) !== buf[i])
-      throw new TypeError('takes uint8');
+  while (idx < len) {
+    var c = bytes[idx++];
 
-  switch (buf.length) {
-    case 1:
-      return buf[0];
-    case 3:
-      // FIXME
-    default:
-      throw new TypeError('bad bytes length');
+    if ((c & 0x80) == 0) {
+      // 0XXX XXXX 1 byte (0x00 ~ 0x7f)
+      buf.push(c);
+    } else if ((c & 0xe0) == 0xc0) {
+      // 110X XXXX 2 bytes (0xc2 ~ 0xdf)
+      var d = bytes[idx++];
+      buf.push(((c & 0x1f) << 6) | (d & 0x3f));
+    } else if ((c & 0xf0) == 0xe0) {
+      // 1110 XXXX 3 bytes (0xe0 ~ 0xe1, 0xee ~ 0xef)
+      var d = bytes[idx++];
+      var e = bytes[idx++];
+      buf.push(((c & 0x0f) << 12) | ((d & 0x3f) << 6) | (e & 0x3f));
+    } else if ((c & 0xf8) == 0xf0) {
+      // 1111 0XXX 4 bytes (0xf0 ~ 0xf4)
+      var d = bytes[idx++];
+      var e = bytes[idx++];
+      var f = bytes[idx++];
+      buf.push(((c & 0x0f) << 18) | ((d & 0x3f) << 12) |
+               ((e & 0x3f) << 6) | (f & 0x3f));
+    }
   }
-}
 
-exports = module.exports = {
-  fromChar:       fromChar,
-  fromCharCode:   fromCharCode,
-  fromString:     fromString,
-  toCharCode:     toCharCode,
+  return String.fromCharCode.apply(null, buf);
 };
