@@ -1,4 +1,4 @@
-// Utf8 bytes converter for nodejs/iojs.
+// Utf8 bytes utils for nodejs/iojs.
 // Copyright (c) Chao Wang <hit9@icloud.com>
 
 function fromCharCode(c) {
@@ -8,16 +8,22 @@ function fromCharCode(c) {
 
   var buf = [];
 
-  if (c <= 0xff) {
+  if (c <= 0x7f) {
+    // 0XXX XXXX 1 byte
     buf[0] = c;
     buf.length = 1;
+  } else if (c <= 0x7ff) {
+    // 110X XXXX 2 bytes
+    buf[0] = (0xc0 | (c >> 6));
+    buf[1] = (0x80 | (c & 0x3f));
+    buf.length = 2;
   } else if (c <= 0xffff) {
+    // 1110 XXXX 3 bytes
     buf[0] = (0xe0 | (c >> 12));
     buf[1] = (0x80 | ((c >> 6) & 0x3f));
     buf[2] = (0x80 | (c & 0x3f));
     buf.length = 3;
   }
-
   return buf;
 };
 
