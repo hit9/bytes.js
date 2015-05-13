@@ -10,6 +10,6 @@
     "keywords": ["utf8", "bytes"],
     "main": "./bytes.js",
     "scripts": {"test": "node test.js"},
-    "devDependencies": {"mut": "0.0.3"},
+    "devDependencies": {"mut": ">=0.0.4"},
     "license": "MIT"
 }
