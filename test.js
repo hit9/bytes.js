@@ -1,6 +1,6 @@
 // tests for `bytes.js`.
 var bytes = require('./bytes');
-var mut = require('mut');
+var ntt = require('ntt');
 var assert = require('assert');
 
 var runTest = function(fn, cases) {
@@ -11,7 +11,7 @@ var runTest = function(fn, cases) {
   }
 };
 
-mut('bytes.js', function(test) {
+ntt('bytes.js', function(test) {
   var fromStringCases = [
     {args: ['~'], except: [0x7e]},
     {args: ['1234'], except: [0x31, 0x32, 0x33, 0x34]},
